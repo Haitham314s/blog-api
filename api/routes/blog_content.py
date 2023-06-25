@@ -93,21 +93,19 @@ async def update_blog(
 
     try:
         blog_content = {k: v for k, v in blog_content.dict().items() if v is not None}
+        updated_result = await db["blogPost"].update_one(
+            {"_id": id}, {"$set": blog_content}
+        )
+        updated_blog_post = await db["blogPost"].find_one({"_id": id})
         if (
             len(blog_content) >= 1
-            and (
-                updated_result := await db["blogPost"].update_one(
-                    {"_id": id}, {"$set": blog_content}
-                )
-            )
-        ).modified_count == 1 and (
-            updated_blog_post := await db["blogPost"].find_one({"_id": id})
-        ) is not None:
+            and updated_result.modified_count == 1
+            and updated_blog_post is not None
+        ):
             return updated_blog_post
 
-        if (
-            existing_blog_post := await db["blogPost"].find_one({"_id": id})
-        ) is not None:
+        existing_blog_post = await db["blogPost"].find_one({"_id": id})
+        if existing_blog_post is not None:
             return existing_blog_post
     except Exception as e:
         print(e)
